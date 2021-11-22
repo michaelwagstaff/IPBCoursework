@@ -27,4 +27,14 @@ input_size = "TODO"
 hidden_size = "TODO"
 output_size = "TODO"
 
+# What sizes do we want here ^? How do we know what we want?
+
 nn = nn_one_layer(input_size, hidden_size, output_size) #initialise model
+
+def loss(preds, targets):
+    loss = np.sum((preds - targets)**2)
+    return 0.5 * loss
+
+def loss_derivative(preds, targets):
+    dL_dPred = preds - targets
+    return dL_dPred
