@@ -38,3 +38,15 @@ def loss(preds, targets):
 def loss_derivative(preds, targets):
     dL_dPred = preds - targets
     return dL_dPred
+
+def sigmoid_derivative(a):
+    dsigmoid_da = sigmoid(a)*(1-sigmoid(a))
+    return dsigmoid_da
+
+def backprop(W1, W2, dL_dPred, U, H, Z):
+    dL_dW2 = np.matmul(H.T, dL_dPred)
+    dL_dH = np.matmul(dL_dPred, W2.T)
+    dL_dZ = np.multiply(sigmoid_derivative(Z), dL_dH)
+    dL_dW1 = np.matmul(U.T, dL_dZ)
+    
+    return dL_dW1, dL_dW2
