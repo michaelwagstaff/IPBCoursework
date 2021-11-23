@@ -9,7 +9,6 @@ train_images = np.true_divide(train_images, 255)
 test_images = np.true_divide(test_images, 255)
 
 def sigmoid(a):
-    np.clip(a, 0.001, 0.999)
     siga = 1/(1 + np.exp(-a))
     return siga
     
@@ -23,13 +22,16 @@ class nn_one_layer():
         self.f = sigmoid
     
     def forward(self, u):
+        print("W1: " + str(np.sum(self.W1)))
         print(u.shape)
+        print(self.W1.shape)
+        print("W2: " + str(np.sum(self.W2)))
         z = np.matmul(u, self.W1)
-        print(z.shape)
+        #print("Z: " + str(z[85]))
         h = self.f(z)
-        print(h.shape)
+        #print("H" + str(h[85]))
         v = np.matmul(h, self.W2)
-        print(v.shape)
+        #print("W2" + str(self.W2.shape))
         return v, h, z
 
 input_size = 784
@@ -41,11 +43,14 @@ output_size = 10
 nn = nn_one_layer(input_size, hidden_size, output_size) #initialise model
 
 def loss_function(preds, targets):
-    loss = np.sum((preds - targets)**2)
+    #print(preds)
+    #print(targets)
+    loss = np.sum((preds - targets)**2)/784
+    #print(loss)
     return 0.5 * loss
 
 def loss_derivative(preds, targets):
-    dL_dPred = preds - targets
+    dL_dPred = (preds - targets)/784
     return dL_dPred
 
 def sigmoid_derivative(a):
@@ -106,7 +111,8 @@ def test(nn, test_images, test_labels):
         t[x]=1
         return t
     vector_targets = list(map(f, targets)) # Why can't we just use Haskell??
-
+    #print(preds[0])
+    #print(targets[0])
     loss = loss_function(preds, vector_targets)
     return loss
 
