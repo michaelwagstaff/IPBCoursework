@@ -5,8 +5,11 @@ from keras.datasets import mnist
 
 (train_images, train_labels), (test_images, test_labels) = mnist.load_data()
 
+train_images = np.true_divide(train_images, 255)
+test_images = np.true_divide(test_images, 255)
+
 def sigmoid(a):
-    np.clip(a, 0.1, 100)
+    np.clip(a, 0.001, 0.999)
     siga = 1/(1 + np.exp(-a))
     return siga
     
@@ -20,9 +23,13 @@ class nn_one_layer():
         self.f = sigmoid
     
     def forward(self, u):
+        print(u.shape)
         z = np.matmul(u, self.W1)
+        print(z.shape)
         h = self.f(z)
+        print(h.shape)
         v = np.matmul(h, self.W2)
+        print(v.shape)
         return v, h, z
 
 input_size = 784
@@ -64,6 +71,7 @@ def generate_batch(images, labels, batch_size):
     rand_inds = np.random.randint(0, len(labels), batch_size)
     inputs_batch = inputs[rand_inds]
     targets_batch = targets[rand_inds]
+    #print(inputs_batch)
     
     return inputs_batch, targets_batch
     
@@ -71,15 +79,15 @@ def generate_batch(images, labels, batch_size):
 def train_one_batch(nn, train_imgs, train_lbls, batch_size, learning_rate):
     inputs, targets = generate_batch(train_imgs, train_lbls, batch_size)
     preds, H, Z = nn.forward(inputs)
-    print(preds[0])
-    print(targets[0])
+    #print(preds[0])
+    #print(targets[0])
     def f(x):
         t = np.zeros(10)
         t[x]=1
         return t
     vector_targets = list(map(f, targets)) # Why on earth do I have to convert manually to a list
                                            # I swear to god Python sucks so bad
-    print(vector_targets[0])
+    #print(vector_targets[0])
     loss = loss_function(preds, vector_targets)
 
     dL_dPred = loss_derivative(preds, vector_targets)
@@ -91,7 +99,7 @@ def train_one_batch(nn, train_imgs, train_lbls, batch_size, learning_rate):
     return loss
 
 def test(nn, test_images, test_labels):
-    inputs, targets = generate_batch(test_images, test_labels, batch_size=200)
+    inputs, targets = generate_batch(test_images, test_labels, batch_size=100)
     preds, H, Z = nn.forward(inputs)
     def f(x):
         t = np.zeros(10)
