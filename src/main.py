@@ -23,15 +23,15 @@ class nn_one_layer():
         v = np.matmul(h, self.W2)
         return v, h, z
 
-input_size = "TODO"
-hidden_size = "TODO"
-output_size = "TODO"
+input_size = 784
+hidden_size = 100
+output_size = 1
 
 # What sizes do we want here ^? How do we know what we want?
 
 nn = nn_one_layer(input_size, hidden_size, output_size) #initialise model
 
-def loss(preds, targets):
+def loss_function(preds, targets):
     loss = np.sum((preds - targets)**2)
     return 0.5 * loss
 
@@ -50,3 +50,34 @@ def backprop(W1, W2, dL_dPred, U, H, Z):
     dL_dW1 = np.matmul(U.T, dL_dZ)
     
     return dL_dW1, dL_dW2
+
+def generate_batch(train_imgs, train_lbls, batch_size):
+    #differentiate inputs (features) from targets and transform each into 
+    #numpy array with each row as an example
+    inputs = np.vstack(train_imgs)
+    targets = np.vstack(train_lbls)
+    
+    #randomly choose batch_size many examples; note there will be
+    #duplicate entries when batch_size > len(dataset) 
+    rand_inds = np.random.randint(0, len(inputs), batch_size)
+    inputs_batch = inputs[rand_inds]
+    targets_batch = targets[rand_inds]
+    
+    return inputs_batch, targets_batch
+    
+
+def train_one_batch(nn, dataset, batch_size, lr):
+    inputs, targets = generate_batch(dataset, batch_size)
+    preds, H, Z = nn.forward(inputs)
+
+    loss = loss_function(preds, targets)
+
+    dL_dPred = loss_derivative(preds, targets)
+    dL_dW1, dL_dW2 = backprop(nn.W1, nn.W2, dL_dPred, U=inputs, H=H, Z=Z)
+
+    nn.W1 -= lr * dL_dW1
+    nn.W2 -= lr * dL_dW2
+    
+    return loss
+    
+print("Finished!")
