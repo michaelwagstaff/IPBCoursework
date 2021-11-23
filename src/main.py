@@ -1,10 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from keras.datasets import mnist
+#from sklearn.datasets import fetch_ml
 
 (train_images, train_labels), (test_images, test_labels) = mnist.load_data()
 
 def sigmoid(a):
+    np.clip(a, 0.1, 100)
     siga = 1/(1 + np.exp(-a))
     return siga
     
@@ -25,7 +27,7 @@ class nn_one_layer():
 
 input_size = 784
 hidden_size = 100
-output_size = 1
+output_size = 10
 
 # What sizes do we want here ^? How do we know what we want?
 
@@ -51,15 +53,15 @@ def backprop(W1, W2, dL_dPred, U, H, Z):
     
     return dL_dW1, dL_dW2
 
-def generate_batch(train_imgs, train_lbls, batch_size):
+def generate_batch(images, labels, batch_size):
     #differentiate inputs (features) from targets and transform each into 
     #numpy array with each row as an example
-    inputs = np.vstack(train_imgs)
-    targets = np.vstack(train_lbls)
+    inputs = images.reshape(len(labels),784)
+    targets = np.vstack(labels)
     
     #randomly choose batch_size many examples; note there will be
     #duplicate entries when batch_size > len(dataset) 
-    rand_inds = np.random.randint(0, len(inputs), batch_size)
+    rand_inds = np.random.randint(0, len(labels), batch_size)
     inputs_batch = inputs[rand_inds]
     targets_batch = targets[rand_inds]
     
@@ -69,10 +71,18 @@ def generate_batch(train_imgs, train_lbls, batch_size):
 def train_one_batch(nn, train_imgs, train_lbls, batch_size, learning_rate):
     inputs, targets = generate_batch(train_imgs, train_lbls, batch_size)
     preds, H, Z = nn.forward(inputs)
+    print(preds[0])
+    print(targets[0])
+    def f(x):
+        t = np.zeros(10)
+        t[x]=1
+        return t
+    vector_targets = list(map(f, targets)) # Why on earth do I have to convert manually to a list
+                                           # I swear to god Python sucks so bad
+    print(vector_targets[0])
+    loss = loss_function(preds, vector_targets)
 
-    loss = loss_function(preds, targets)
-
-    dL_dPred = loss_derivative(preds, targets)
+    dL_dPred = loss_derivative(preds, vector_targets)
     dL_dW1, dL_dW2 = backprop(nn.W1, nn.W2, dL_dPred, U=inputs, H=H, Z=Z)
 
     nn.W1 -= learning_rate * dL_dW1
@@ -80,6 +90,35 @@ def train_one_batch(nn, train_imgs, train_lbls, batch_size, learning_rate):
     
     return loss
 
-train_one_batch(nn, train_images, train_labels, 200, 0.02)
+def test(nn, test_images, test_labels):
+    inputs, targets = generate_batch(test_images, test_labels, batch_size=200)
+    preds, H, Z = nn.forward(inputs)
+    def f(x):
+        t = np.zeros(10)
+        t[x]=1
+        return t
+    vector_targets = list(map(f, targets)) # Why can't we just use Haskell??
+
+    loss = loss_function(preds, vector_targets)
+    return loss
+
+train_one_batch(nn, train_images, train_labels, 200, 0.1)
+print(test(nn, test_images, test_labels))
+train_one_batch(nn, train_images, train_labels, 200, 0.1)
+print(test(nn, test_images, test_labels))
+train_one_batch(nn, train_images, train_labels, 200, 0.1)
+print(test(nn, test_images, test_labels))
+train_one_batch(nn, train_images, train_labels, 200, 0.1)
+print(test(nn, test_images, test_labels))
+train_one_batch(nn, train_images, train_labels, 200, 0.1)
+print(test(nn, test_images, test_labels))
+train_one_batch(nn, train_images, train_labels, 200, 0.1)
+print(test(nn, test_images, test_labels))
+train_one_batch(nn, train_images, train_labels, 200, 0.1)
+print(test(nn, test_images, test_labels))
+train_one_batch(nn, train_images, train_labels, 200, 0.1)
+print(test(nn, test_images, test_labels))
+train_one_batch(nn, train_images, train_labels, 200, 0.1)
+print(test(nn, test_images, test_labels))
 
 print("Finished!")
