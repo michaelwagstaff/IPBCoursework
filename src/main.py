@@ -2,6 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from keras.datasets import mnist
 import random
+from functools import partial
+import functools
 #from sklearn.datasets import fetch_ml
 
 (train_images, train_labels), (test_images, test_labels) = mnist.load_data()
@@ -104,12 +106,11 @@ def test(nn, test_images, test_labels):
     vector_targets = list(map(f, targets)) # Why can't we just use Haskell??
     loss = loss_function(preds, vector_targets)
     sum = 0
+    print(preds[0])
     for i in range(0, len(targets)):
         for j in range(0,10):
-            if(preds[i][j]>0.5 and vector_targets[i][j] == 1):
+            if(preds[i][j]==max(preds[i]) and vector_targets[i][j] == 1):
                 sum+=1
-            #if(vector_targets[i][j] == 1):
-                #print(preds[i])
     print(str(sum) + " of " + str(len(targets)) + " correct")
     print(loss)
     return loss
