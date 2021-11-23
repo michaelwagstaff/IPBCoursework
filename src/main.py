@@ -22,10 +22,8 @@ class nn_one_layer():
         self.f = sigmoid
     
     def forward(self, u):
-        print("W1: " + str(np.sum(self.W1)))
-        print(u.shape)
-        print(self.W1.shape)
-        print("W2: " + str(np.sum(self.W2)))
+        #print("W1: " + str(np.sum(self.W1)))
+        #print("W2: " + str(np.sum(self.W2)))
         z = np.matmul(u, self.W1)
         h = self.f(z)
         v = np.matmul(h, self.W2)
@@ -106,23 +104,8 @@ def test(nn, test_images, test_labels):
     loss = loss_function(preds, vector_targets)
     return loss
 
-train_one_batch(nn, train_images, train_labels, 200, 0.1)
-print(test(nn, test_images, test_labels))
-train_one_batch(nn, train_images, train_labels, 200, 0.1)
-print(test(nn, test_images, test_labels))
-train_one_batch(nn, train_images, train_labels, 200, 0.1)
-print(test(nn, test_images, test_labels))
-train_one_batch(nn, train_images, train_labels, 200, 0.1)
-print(test(nn, test_images, test_labels))
-train_one_batch(nn, train_images, train_labels, 200, 0.1)
-print(test(nn, test_images, test_labels))
-train_one_batch(nn, train_images, train_labels, 200, 0.1)
-print(test(nn, test_images, test_labels))
-train_one_batch(nn, train_images, train_labels, 200, 0.1)
-print(test(nn, test_images, test_labels))
-train_one_batch(nn, train_images, train_labels, 200, 0.1)
-print(test(nn, test_images, test_labels))
-train_one_batch(nn, train_images, train_labels, 200, 0.1)
-print(test(nn, test_images, test_labels))
+for i in range(0,10):
+    train_one_batch(nn, train_images, train_labels, 200, 0.1)
+    print(test(nn, test_images, test_labels))
 
 print("Finished!")
