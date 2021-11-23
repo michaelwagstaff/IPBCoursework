@@ -66,8 +66,8 @@ def generate_batch(train_imgs, train_lbls, batch_size):
     return inputs_batch, targets_batch
     
 
-def train_one_batch(nn, dataset, batch_size, lr):
-    inputs, targets = generate_batch(dataset, batch_size)
+def train_one_batch(nn, train_imgs, train_lbls, batch_size, learning_rate):
+    inputs, targets = generate_batch(train_imgs, train_lbls, batch_size)
     preds, H, Z = nn.forward(inputs)
 
     loss = loss_function(preds, targets)
@@ -75,9 +75,11 @@ def train_one_batch(nn, dataset, batch_size, lr):
     dL_dPred = loss_derivative(preds, targets)
     dL_dW1, dL_dW2 = backprop(nn.W1, nn.W2, dL_dPred, U=inputs, H=H, Z=Z)
 
-    nn.W1 -= lr * dL_dW1
-    nn.W2 -= lr * dL_dW2
+    nn.W1 -= learning_rate * dL_dW1
+    nn.W2 -= learning_rate * dL_dW2
     
     return loss
-    
+
+train_one_batch(nn, train_images, train_labels, 200, 0.02)
+
 print("Finished!")
