@@ -27,11 +27,8 @@ class nn_one_layer():
         print(self.W1.shape)
         print("W2: " + str(np.sum(self.W2)))
         z = np.matmul(u, self.W1)
-        #print("Z: " + str(z[85]))
         h = self.f(z)
-        #print("H" + str(h[85]))
         v = np.matmul(h, self.W2)
-        #print("W2" + str(self.W2.shape))
         return v, h, z
 
 input_size = 784
@@ -43,10 +40,7 @@ output_size = 10
 nn = nn_one_layer(input_size, hidden_size, output_size) #initialise model
 
 def loss_function(preds, targets):
-    #print(preds)
-    #print(targets)
     loss = np.sum((preds - targets)**2)/784
-    #print(loss)
     return 0.5 * loss
 
 def loss_derivative(preds, targets):
@@ -84,8 +78,6 @@ def generate_batch(images, labels, batch_size):
 def train_one_batch(nn, train_imgs, train_lbls, batch_size, learning_rate):
     inputs, targets = generate_batch(train_imgs, train_lbls, batch_size)
     preds, H, Z = nn.forward(inputs)
-    #print(preds[0])
-    #print(targets[0])
     def f(x):
         t = np.zeros(10)
         t[x]=1
@@ -111,8 +103,6 @@ def test(nn, test_images, test_labels):
         t[x]=1
         return t
     vector_targets = list(map(f, targets)) # Why can't we just use Haskell??
-    #print(preds[0])
-    #print(targets[0])
     loss = loss_function(preds, vector_targets)
     return loss
 
