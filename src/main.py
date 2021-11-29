@@ -115,9 +115,17 @@ def test(nn, test_images, test_labels):
     print(loss)
     return loss
 
+indices = [x for x in range(0,500)]
+results = []
 for i in range(0,10000):
     train_one_batch(nn, train_images, train_labels, 200, 0.1)
     if(i % 20 == 0):
-        test(nn, test_images, test_labels)
+        results.append(test(nn, test_images, test_labels))
+    plt.xlabel("Test run number")
+    plt.ylabel("Loss function")
+plt.plot(indices, results, "x")
+plt.show()
+
+
 
 print("Finished!")
