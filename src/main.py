@@ -41,11 +41,11 @@ output_size = 10
 nn = nn_one_layer(input_size, hidden_size, output_size) #initialise model
 
 def loss_function(preds, targets):
-    loss = np.sum((preds - targets)**2)/784
+    loss = np.sum((preds - targets)**2)
     return 0.5 * loss
 
 def loss_derivative(preds, targets):
-    dL_dPred = (preds - targets)/784
+    dL_dPred = (preds - targets)
     return dL_dPred
 
 def sigmoid_derivative(a):
@@ -115,17 +115,16 @@ def test(nn, test_images, test_labels):
     print(loss)
     return loss
 
-indices = [x for x in range(0,500)]
+indices = [x for x in range(0,250)]
 results = []
-for i in range(0,10000):
-    train_one_batch(nn, train_images, train_labels, 200, 0.1)
+for i in range(0,5000): # originally 10,000
+    train_one_batch(nn, train_images, train_labels, 200, 0.1/784)
     if(i % 20 == 0):
         results.append(test(nn, test_images, test_labels))
     plt.xlabel("Test run number")
-    plt.ylabel("Loss function")
-plt.plot(indices, results, "x")
+    plt.ylabel("Loss function (Mean Squared Error)")
+plt.plot(indices, results)
 plt.show()
-
 
 
 print("Finished!")
