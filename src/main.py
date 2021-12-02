@@ -199,7 +199,7 @@ plt.show()
 """
 
 seed = 1
-batch_size = 5 #number of examples per batch
+batch_size = 100 #number of examples per batch
 nbatches = 5000 #number of batches used for training
 lr = 0.1/784 #learning rate
 
@@ -216,12 +216,12 @@ def probabilistic_backprop(W1, W2, dL_dPred, U, H, Z):
         dL_dH = np.matmul(dL_dPred, W2.T)
         dL_dZ = np.multiply(sigmoid_derivative(Z), dL_dH)
         dL_dW1 = np.matmul(U.T, dL_dZ)
-        print("Backprop")
+        #print("Backprop")
     else:
         dL_dH = 1
         dL_dZ = dL_dH
         dL_dW1 = U.T
-        print("Not backprop")
+        #print("Not backprop")
     
     
     return dL_dW1, dL_dW2
@@ -239,8 +239,9 @@ def probabilistic_train_one_batch(nn, train_imgs, train_lbls, batch_size, learni
     loss = loss_function(preds, vector_targets)
 
     dL_dPred = loss_derivative(preds, vector_targets)
+    #print("inputs" + str(inputs.shape))
     dL_dW1, dL_dW2 = probabilistic_backprop(nn.W1, nn.W2, dL_dPred, U=inputs, H=H, Z=Z)
-    print(dL_dW1.shape)
+    #print(dL_dW1.shape)
     nn.W1 -= learning_rate * dL_dW1
     nn.W2 -= learning_rate * dL_dW2
     
@@ -256,7 +257,7 @@ nn = nn_one_layer(input_size, hidden_size, output_size) #initialise (untrained) 
 
 losses = [] #training losses to record
 for i in range(nbatches):
-    print(lr)
+    #print(lr)
     loss = probabilistic_train_one_batch(nn, train_images, train_labels, batch_size=batch_size, learning_rate=lr)
     losses.append(loss)
     
