@@ -8,8 +8,11 @@ import functools
 
 (train_images, train_labels), (test_images, test_labels) = mnist.load_data()
 
-train_images = np.true_divide(train_images, 255)
-test_images = np.true_divide(test_images, 255)
+train_images = np.true_divide(train_images, 255).reshape(len(train_labels), 784)
+test_images = np.true_divide(test_images, 255).reshape(len(test_labels), 784)
+
+train_labels = np.vstack(train_labels)
+test_labels = np.vstack(test_labels)
 
 def sigmoid(a):
     siga = 1/(1 + np.exp(-a))
@@ -64,8 +67,8 @@ def backprop(W1, W2, dL_dPred, U, H, Z):
 def generate_batch(images, labels, batch_size):
     #differentiate inputs (features) from targets and transform each into 
     #numpy array with each row as an example
-    inputs = images.reshape(len(labels),784)
-    targets = np.vstack(labels)
+    inputs = images
+    targets = labels
     
     #randomly choose batch_size many examples; note there will be
     #duplicate entries when batch_size > len(dataset) 
