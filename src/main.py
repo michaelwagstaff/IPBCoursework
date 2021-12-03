@@ -124,8 +124,11 @@ def train_one_batch_fixed_feedback(nn, train_imgs, train_lbls, batch_size, lr):
     
     return loss
 
-def test(nn, test_images, test_labels):
-    inputs, targets = generate_batch(test_images, test_labels, batch_size=100)
+def test(nn, test_images, test_labels, final_test=False):
+    if final_test:
+        inputs, targets = test_images, test_labels
+    else:
+        inputs, targets = generate_batch(test_images, test_labels, batch_size=100)
     preds, H, Z = nn.forward(inputs)
     def f(x):
         t = np.zeros(10)
@@ -134,26 +137,29 @@ def test(nn, test_images, test_labels):
     vector_targets = list(map(f, targets)) # Why can't we just use Haskell??
     loss = loss_function(preds, vector_targets)
     sum = 0
-    print(preds[0])
+    #print(preds[0])
     for i in range(0, len(targets)):
         for j in range(0,10):
             if(preds[i][j]==max(preds[i]) and vector_targets[i][j] == 1):
                 sum+=1
-    print(str(sum) + " of " + str(len(targets)) + " correct")
-    print(loss)
+    #print(str(sum) + " of " + str(len(targets)) + " correct")
+    #print(loss)
+    if final_test:
+        print(str(sum) + " of " + str(len(targets)) + " correct")
     return loss
-"""
-indices = [x for x in range(0,250)]
+
+indices = [x for x in range(0,500)]
 results = []
-for i in range(0,5000): # originally 10,000
+for i in range(0,10000): # originally 10,000
     train_one_batch(nn, train_images, train_labels, 200, 0.1/784)
     if(i % 20 == 0):
         results.append(test(nn, test_images, test_labels))
     plt.xlabel("Test run number")
     plt.ylabel("Loss function (Mean Squared Error)")
 plt.plot(indices, results)
+print(str(test(nn, test_images, test_labels, True)))
 plt.show()
-"""
+
 
 """
 seed = 1
