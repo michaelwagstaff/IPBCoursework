@@ -4,6 +4,7 @@ from keras.datasets import mnist
 import random
 from functools import partial
 import functools
+import math
 #from sklearn.datasets import fetch_ml
 
 (train_images, train_labels), (test_images, test_labels) = mnist.load_data()
@@ -124,12 +125,26 @@ def train_one_batch_fixed_feedback(nn, train_imgs, train_lbls, batch_size, lr):
     
     return loss
 
-def test(nn, test_images, test_labels, final_test=False):
+def test(nn, test_images, test_labels, final_test=False, find_avg_H=False):
     if final_test:
         inputs, targets = test_images, test_labels
     else:
         inputs, targets = generate_batch(test_images, test_labels, batch_size=100)
     preds, H, Z = nn.forward(inputs)
+    if(find_avg_H):
+        print(H.shape)
+        avg = np.sum(H)/(100*10000)
+        current_entropy_sum = 0
+        above = 0
+        below = 0
+        for layer in H:
+            for item in layer:
+                if(item > avg):
+                    above += 1
+                else:
+                    below += 1
+        current_entropy_sum = - above * (above/(above+below)) * math.log2((above/(above+below)))
+        print("Entropy: " + str(current_entropy_sum))
     def f(x):
         t = np.zeros(10)
         t[x]=1
@@ -148,16 +163,16 @@ def test(nn, test_images, test_labels, final_test=False):
         print(str(sum) + " of " + str(len(targets)) + " correct")
     return loss
 
-indices = [x for x in range(0,500)]
+indices = [x for x in range(0,250)]
 results = []
-for i in range(0,10000): # originally 10,000
+for i in range(0,5000): # originally 10,000
     train_one_batch(nn, train_images, train_labels, 200, 0.1/784)
     if(i % 20 == 0):
         results.append(test(nn, test_images, test_labels))
     plt.xlabel("Test run number")
     plt.ylabel("Loss function (Mean Squared Error)")
 plt.plot(indices, results)
-print(str(test(nn, test_images, test_labels, True)))
+print(str(test(nn, test_images, test_labels, True, True)))
 plt.show()
 
 
