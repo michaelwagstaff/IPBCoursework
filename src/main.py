@@ -131,10 +131,10 @@ def test(nn, test_images, test_labels, final_test=False, find_avg_H=False):
     else:
         inputs, targets = generate_batch(test_images, test_labels, batch_size=100)
     preds, H, Z = nn.forward(inputs)
+    current_entropy_sum = 0
     if(find_avg_H):
-        print(H.shape)
+        #print(H.shape)
         avg = np.sum(H)/(100*10000)
-        current_entropy_sum = 0
         above = 0
         below = 0
         for layer in H:
@@ -161,16 +161,19 @@ def test(nn, test_images, test_labels, final_test=False, find_avg_H=False):
     #print(loss)
     if final_test:
         print(str(sum) + " of " + str(len(targets)) + " correct")
+    if(find_avg_H):
+        return current_entropy_sum / 10000
     return loss
 
-indices = [x for x in range(0,250)]
+indices = [x for x in range(0,500)]
 results = []
-for i in range(0,5000): # originally 10,000
+for i in range(0,10000): # originally 10,000
     train_one_batch(nn, train_images, train_labels, 200, 0.1/784)
     if(i % 20 == 0):
-        results.append(test(nn, test_images, test_labels))
+        results.append(test(nn, test_images, test_labels, True, True))
     plt.xlabel("Test run number")
-    plt.ylabel("Loss function (Mean Squared Error)")
+    #plt.ylabel("Loss function (Mean Squared Error)")
+    plt.ylabel("Average entropy of hidden layer (bits)")
 plt.plot(indices, results)
 print(str(test(nn, test_images, test_labels, True, True)))
 plt.show()
