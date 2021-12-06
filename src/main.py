@@ -37,7 +37,7 @@ class nn_one_layer():
         return v, h, z
 
 input_size = 784
-hidden_size = 100
+hidden_size = 10
 output_size = 10
 
 # What sizes do we want here ^? How do we know what we want?
@@ -134,16 +134,20 @@ def test(nn, test_images, test_labels, final_test=False, find_avg_H=False):
     current_entropy_sum = 0
     if(find_avg_H):
         #print(H.shape)
-        avg = np.sum(H)/(100*10000)
-        above = 0
-        below = 0
-        for layer in H:
-            for item in layer:
-                if(item > avg):
-                    above += 1
-                else:
-                    below += 1
-        current_entropy_sum = - above * (above/(above+below)) * math.log2((above/(above+below)))
+        avg = np.sum(H)/(H.size)
+        #above = 0
+        #below = 0
+        discretised_occurrences_count = {}
+        for i in range(H.shape[0]):
+            for j in range(H.shape[1]):
+                H[i][j] = 1 if H[i][j] > avg else 0 # Cringe ternary operators
+            if not tuple(H[i].tolist()) in discretised_occurrences_count:
+                discretised_occurrences_count[tuple(H[i].tolist())] = 1
+            else:
+                discretised_occurrences_count[tuple(H[i].tolist())] += 1
+        for _, item in discretised_occurrences_count.items():
+            current_entropy_sum += - (item/H.shape[0]) * math.log2(item/H.shape[0])
+        #current_entropy_sum = - above * (above/(above+below)) * math.log2((above/(above+below)))
         print("Entropy: " + str(current_entropy_sum))
     def f(x):
         t = np.zeros(10)
@@ -162,7 +166,7 @@ def test(nn, test_images, test_labels, final_test=False, find_avg_H=False):
     if final_test:
         print(str(sum) + " of " + str(len(targets)) + " correct")
     if(find_avg_H):
-        return current_entropy_sum / 10000
+        return current_entropy_sum
     return loss
 
 indices = [x for x in range(0,500)]
