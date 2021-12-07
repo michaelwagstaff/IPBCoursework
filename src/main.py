@@ -126,17 +126,17 @@ def train_one_batch_fixed_feedback(nn, train_imgs, train_lbls, batch_size, lr):
     return loss
 
 def test(nn, test_images, test_labels, final_test=False, find_avg_H=False):
-    if final_test:
+    if find_avg_H:
+        inputs = np.concatenate((test_images, train_images), axis=0)
+        targets = np.concatenate((test_labels, train_labels), axis=0)
+    elif final_test:
         inputs, targets = test_images, test_labels
     else:
         inputs, targets = generate_batch(test_images, test_labels, batch_size=100)
     preds, H, Z = nn.forward(inputs)
     current_entropy_sum = 0
     if(find_avg_H):
-        #print(H.shape)
         avg = np.sum(H)/(H.size)
-        #above = 0
-        #below = 0
         discretised_occurrences_count = {}
         for i in range(H.shape[0]):
             for j in range(H.shape[1]):
@@ -169,16 +169,18 @@ def test(nn, test_images, test_labels, final_test=False, find_avg_H=False):
         return current_entropy_sum
     return loss
 
-indices = [x for x in range(0,500)]
-results = []
-for i in range(0,10000): # originally 10,000
-    train_one_batch(nn, train_images, train_labels, 200, 0.1/784)
-    if(i % 20 == 0):
-        results.append(test(nn, test_images, test_labels, True, True))
-    plt.xlabel("Test run number")
-    #plt.ylabel("Loss function (Mean Squared Error)")
-    plt.ylabel("Average entropy of hidden layer (bits)")
-plt.plot(indices, results)
+for hidden_layer_size_multiple in range(1, 9):
+    hidden_size = hidden_layer_size_multiple * 5
+    indices = [x for x in range(0,500)]
+    results = []
+    for i in range(0,10000): # originally 10,000
+        train_one_batch(nn, train_images, train_labels, 200, 0.1/784)
+        if(i % 20 == 0):
+            results.append(test(nn, test_images, test_labels, True, True))
+        plt.xlabel("Test run number")
+        #plt.ylabel("Loss function (Mean Squared Error)")
+        plt.ylabel("Average entropy of hidden layer (bits)")
+    plt.plot(indices, results, label="hidden layer size: " + str(hidden_layer_size_multiple * 5))
 print(str(test(nn, test_images, test_labels, True, True)))
 plt.show()
 
