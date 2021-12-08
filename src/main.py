@@ -1,3 +1,4 @@
+from typing import final
 import numpy as np
 import matplotlib.pyplot as plt
 from keras.datasets import mnist
@@ -125,8 +126,8 @@ def train_one_batch_fixed_feedback(nn, train_imgs, train_lbls, batch_size, lr):
     
     return loss
 
-def test(nn, test_images, test_labels, final_test=False, find_avg_H=False):
-    if find_avg_H:
+def test(nn, test_images, test_labels, final_test=False, find_avg_H=False, find_avg_Z=False):
+    if find_avg_H or find_avg_Z:
         inputs = np.concatenate((test_images, train_images), axis=0)
         targets = np.concatenate((test_labels, train_labels), axis=0)
     elif final_test:
@@ -148,6 +149,20 @@ def test(nn, test_images, test_labels, final_test=False, find_avg_H=False):
         for _, item in discretised_occurrences_count.items():
             current_entropy_sum += - (item/H.shape[0]) * math.log2(item/H.shape[0])
         #current_entropy_sum = - above * (above/(above+below)) * math.log2((above/(above+below)))
+        #print("Hidden Layer Entropy: " + str(current_entropy_sum))
+    if(find_avg_Z):
+        avg = np.sum(Z)/(Z.size)
+        discretised_occurrences_count = {}
+        for i in range(Z.shape[0]):
+            for j in range(Z.shape[1]):
+                Z[i][j] = 1 if Z[i][j] > avg else 0 # Cringe ternary operators
+            if not tuple(Z[i].tolist()) in discretised_occurrences_count:
+                discretised_occurrences_count[tuple(Z[i].tolist())] = 1
+            else:
+                discretised_occurrences_count[tuple(Z[i].tolist())] += 1
+        for _, item in discretised_occurrences_count.items():
+            current_entropy_sum += - (item/Z.shape[0]) * math.log2(item/Z.shape[0])
+        #current_entropy_sum = - above * (above/(above+below)) * math.log2((above/(above+below)))
         print("Entropy: " + str(current_entropy_sum))
     def f(x):
         t = np.zeros(10)
@@ -165,23 +180,186 @@ def test(nn, test_images, test_labels, final_test=False, find_avg_H=False):
     #print(loss)
     if final_test:
         print(str(sum) + " of " + str(len(targets)) + " correct")
-    if(find_avg_H):
+    if(find_avg_H or find_avg_Z):
         return current_entropy_sum
     return loss
 
-for hidden_layer_size_multiple in range(1, 9):
+def test_quadrants(nn, test_images, test_labels, final_test=False, find_avg_H=False, find_avg_Z=False):
+    if find_avg_H or find_avg_Z:
+        inputs = np.concatenate((test_images, train_images), axis=0)
+        targets = np.concatenate((test_labels, train_labels), axis=0)
+    elif final_test:
+        inputs, targets = test_images, test_labels
+    else:
+        inputs, targets = generate_batch(test_images, test_labels, batch_size=100)
+    preds, H, Z = nn.forward(inputs)
+    final_entropy = 0
+    current_entropy_sum = [0,0,0,0]
+    if(find_avg_H):
+        avg = [0,0,0,0]
+        discretised_occurrences_count = [{},{},{},{}]
+        wi_activations = [0,0,0,0]
+        arr_sums = [0,0,0,0]
+        
+        for i in range(H.shape[0]):
+            #print(inputs[i].shape)
+            #print(np.reshape(inputs[i],(28,28)))
+            sums = [
+                np.sum(np.reshape(inputs[i],(28,28))[:14, :14]),
+                np.sum(np.reshape(inputs[i],(28,28))[:14, 14:]),
+                np.sum(np.reshape(inputs[i],(28,28))[14:, :14]),
+                np.sum(np.reshape(inputs[i],(28,28))[14:, 14:])
+            ]
+            #print("New set")
+            #print(sums)
+            maxval = np.amax(sums)
+            wi = 0
+            for j in range(0,4):
+                if(sums[j] == maxval):
+                    wi=j
+                    wi_activations[j]+=1
+            arr_sums[wi] += np.sum(H[i])
+        for j in range(0, 4):
+            avg[j] = arr_sums[j] / (wi_activations[j] *10)
+            #print("avg: " + str(avg[j]))
+        for i in range(H.shape[0]):
+            sums = [
+                np.sum(np.reshape(inputs[i],(28,28))[:14, :14]),
+                np.sum(np.reshape(inputs[i],(28,28))[:14, 14:]),
+                np.sum(np.reshape(inputs[i],(28,28))[14:, :14]),
+                np.sum(np.reshape(inputs[i],(28,28))[14:, 14:])
+            ]
+            max = np.amax(sums)
+            wi = 0
+            for j in range(0,4):
+                if(sums[j] == max):
+                    wi=j
+            for j in range(H.shape[1]):
+                H[i][j] = 1 if H[i][j] > avg[wi] else 0 # Cringe ternary operators
+            if not tuple(H[i].tolist()) in discretised_occurrences_count[wi]:
+                discretised_occurrences_count[wi][tuple(H[i].tolist())] = 1
+            else:
+                discretised_occurrences_count[wi][tuple(H[i].tolist())] += 1
+        for i in range(0,4):
+            #print(discretised_occurrences_count[i])
+            for _, item in discretised_occurrences_count[i].items():
+                #print("count of identical activations: " + str(item))
+                current_entropy_sum[i] += - (item/wi_activations[i]) * math.log2(item/wi_activations[i])
+            final_entropy += (wi_activations[i]/H.shape[0]) * current_entropy_sum[i]
+        #print(final_entropy)
+        final_entropy = test(nn, test_images, test_labels, True, True, False) - final_entropy
+        #current_entropy_sum = - above * (above/(above+below)) * math.log2((above/(above+below)))
+        print("Mutual Information: " + str(final_entropy))
+    if(find_avg_Z):
+        avg = [0,0,0,0]
+        discretised_occurrences_count = [{},{},{},{}]
+        wi_activations = [0,0,0,0]
+        arr_sums = [0,0,0,0]
+        
+        for i in range(Z.shape[0]):
+            #print(inputs[i].shape)
+            #print(np.reshape(inputs[i],(28,28)))
+            sums = [
+                np.sum(np.reshape(inputs[i],(28,28))[:14, :14]),
+                np.sum(np.reshape(inputs[i],(28,28))[:14, 14:]),
+                np.sum(np.reshape(inputs[i],(28,28))[14:, :14]),
+                np.sum(np.reshape(inputs[i],(28,28))[14:, 14:])
+            ]
+            #print("New set")
+            #print(sums)
+            maxval = np.amax(sums)
+            wi = 0
+            for j in range(0,4):
+                if(sums[j] == maxval):
+                    wi=j
+                    wi_activations[j]+=1
+            arr_sums[wi] += np.sum(Z[i])
+        for j in range(0, 4):
+            avg[j] = arr_sums[j] / (wi_activations[j] *10)
+            #print("avg: " + str(avg[j]))
+        for i in range(Z.shape[0]):
+            sums = [
+                np.sum(np.reshape(inputs[i],(28,28))[:14, :14]),
+                np.sum(np.reshape(inputs[i],(28,28))[:14, 14:]),
+                np.sum(np.reshape(inputs[i],(28,28))[14:, :14]),
+                np.sum(np.reshape(inputs[i],(28,28))[14:, 14:])
+            ]
+            max = np.amax(sums)
+            wi = 0
+            for j in range(0,4):
+                if(sums[j] == max):
+                    wi=j
+            for j in range(Z.shape[1]):
+                Z[i][j] = 1 if Z[i][j] > avg[wi] else 0 # Cringe ternary operators
+            if not tuple(Z[i].tolist()) in discretised_occurrences_count[wi]:
+                discretised_occurrences_count[wi][tuple(Z[i].tolist())] = 1
+            else:
+                discretised_occurrences_count[wi][tuple(Z[i].tolist())] += 1
+        for i in range(0,4):
+            #print(discretised_occurrences_count[i])
+            for _, item in discretised_occurrences_count[i].items():
+                #print("count of identical activations: " + str(item))
+                current_entropy_sum[i] += - (item/wi_activations[i]) * math.log2(item/wi_activations[i])
+            final_entropy += (wi_activations[i]/Z.shape[0]) * current_entropy_sum[i]
+        #print(final_entropy)
+        final_entropy = test(nn, test_images, test_labels, True, False, True) - final_entropy
+        #current_entropy_sum = - above * (above/(above+below)) * math.log2((above/(above+below)))
+        print("Mutual Information: " + str(final_entropy))
+    def f(x):
+        t = np.zeros(10)
+        t[x]=1
+        return t
+    vector_targets = list(map(f, targets)) # Why can't we just use Haskell??
+    loss = loss_function(preds, vector_targets)
+    sum = 0
+    #print(preds[0])
+    """
+    for i in range(0, len(targets)):
+        for j in range(0,10):
+            if(preds[i][j]==max(preds[i]) and vector_targets[i][j] == 1):
+                sum+=1
+    """
+    #print(str(sum) + " of " + str(len(targets)) + " correct")
+    #print(loss)
+    if final_test:
+        print(str(sum) + " of " + str(len(targets)) + " correct")
+    if(find_avg_H or find_avg_Z):
+        return final_entropy
+    return loss
+"""
+for hidden_layer_size_multiple in range(2, 9):
     hidden_size = hidden_layer_size_multiple * 5
+    nn = nn_one_layer(input_size, hidden_size, output_size) #initialise (untrained) model
     indices = [x for x in range(0,500)]
     results = []
     for i in range(0,10000): # originally 10,000
         train_one_batch(nn, train_images, train_labels, 200, 0.1/784)
         if(i % 20 == 0):
-            results.append(test(nn, test_images, test_labels, True, True))
+            results.append(test(nn, test_images, test_labels, True, True, False))
         plt.xlabel("Test run number")
         #plt.ylabel("Loss function (Mean Squared Error)")
-        plt.ylabel("Average entropy of hidden layer (bits)")
-    plt.plot(indices, results, label="hidden layer size: " + str(hidden_layer_size_multiple * 5))
+        plt.ylabel("Entropy of output layer (bits)")
+    plt.plot(indices, results, label = "H size = " +str(hidden_size))
+plt.savefig('hidden_layer_size_range_Y.png', bbox_inches='tight')
 print(str(test(nn, test_images, test_labels, True, True)))
+plt.show()
+"""
+
+# I(W,Y)
+hidden_size = 10
+nn = nn_one_layer(input_size, hidden_size, output_size) #initialise (untrained) model
+indices = [x for x in range(0,500)]
+results = []
+for i in range(0,10000): # originally 10,000
+    train_one_batch(nn, train_images, train_labels, 200, 0.1/784)
+    if(i % 20 == 0):
+        results.append(test_quadrants(nn, test_images, test_labels, True, False, True))
+    plt.xlabel("Test run number")
+    #plt.ylabel("Loss function (Mean Squared Error)")
+    plt.ylabel("Mutual Information between W and Z (bits)")
+plt.plot(indices, results, label = "H size = " +str(hidden_size))
+plt.savefig('Mutual_Information_W_Z.png', bbox_inches='tight')
+print(str(test_quadrants(nn, test_images, test_labels, True, True)))
 plt.show()
 
 
